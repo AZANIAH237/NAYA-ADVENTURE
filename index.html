@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Nala's Ascent — Fixed</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+
+<div id="game-container" class="hidden">
+    <div id="game-area">
+        <div id="game-scroll-layer">
+            <div id="background"></div>
+            <div id="hole"></div>
+            <div id="steps-path"></div>
+            <div id="nala-character">
+                <img id="nala-sprite" src="img/nala_standing.png" alt="Nala" />
+            </div>
+            <img id="castle-image" alt="Goal Hut" /> 
+        </div>
+    </div>
+    
+    <div id="power-message-overlay"></div>
+    
+    <div id="ui-overlay">
+        <div id="timer">Time: 120s</div>
+        <div id="ancestor-powers" aria-live="polite"></div>
+        
+        <div id="ancestor-power-indicator" class="power-message"></div>
+        
+        <div id="question-area">
+            <p id="question-text">Loading Question...</p>
+        </div>
+    </div>
+    <div id="answer-choices"></div>
+</div>
+
+<div id="intro-screen" class="screen">
+    <div class="intro-content">
+        <img id="intro-image" src="img/intro_1.png" alt="Story Image" class="intro-image" />
+        <h1 id="intro-title">Welcome to Nala's Ascent</h1>
+        <p id="intro-detail">Click next to read the story, or skip to start the game.</p>
+        <div class="intro-controls">
+            <button id="intro-next-btn" class="main-btn">Next</button>
+            <button id="intro-start-btn" class="main-btn hidden">Start Game</button>
+            <button id="intro-skip-btn" class="secondary-btn">Skip Intro</button>
+        </div>
+    </div>
+</div>
+
+<div id="dashboard-screen" class="screen hidden">
+    <header class="dashboard-header">
+        <h1>Select Your Adventure</h1>
+        <div class="header-controls">
+            <button id="view-story-btn" class="secondary-btn">View Story</button>
+            <button id="settings-btn" class="secondary-btn">⚙️ Settings</button>
+        </div>
+    </header>
+    <div id="level-gallery" class="level-gallery">
+        </div>
+</div>
+
+<div id="level-intro-screen" class="screen hidden">
+    <h1 id="level-intro-title">Level Intro Title</h1>
+    <div class="spirit-guide-box">
+        <img id="spirit-guide-image" src="img/ancestor_1_guide.png" alt="Spirit Guide" class="guide-image" />
+        <p id="spirit-guide-name">The Guide</p>
+    </div>
+    <p id="level-intro-text" class="story-fade">Intro story text will animate here...</p>
+    <button id="select-subject-btn" class="main-btn">Select Subjects</button>
+</div>
+
+<div id="subject-modal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Select Your Focus</h2>
+        <p>Choose <span id="subject-count">2</span> subjects for this level:</p>
+        <div id="subject-choices" class="subject-choices">
+            </div>
+        <div class="modal-buttons">
+            <button id="start-adventure-btn" class="main-btn" disabled>Start Ascent</button>
+            <button id="cancel-selection-btn" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Game Settings</h2>
+        <div class="settings-group">
+            <label for="music-toggle">Background Music</label>
+            <input type="checkbox" id="music-toggle" checked>
+        </div>
+        <div class="settings-group">
+            <label for="sound-toggle">Sound Effects</label>
+            <input type="checkbox" id="sound-toggle" checked>
+        </div>
+        <button id="close-settings-btn" class="main-btn">Close</button>
+    </div>
+</div>
+
+
+<div id="message-screen" class="modal hidden">
+    <div class="modal-content message-box">
+        <h1 id="message-text">Level Complete!</h1>
+        <img id="result-image" src="" alt="Result Image" class="result-image" />
+        <div id="result-story-detail" class="result-story">Story text here...</div>
+        <div class="modal-buttons">
+            <button id="next-level-btn" class="main-btn hidden">Continue to Next Level</button>
+            <button id="retry-level-btn" class="main-btn hidden">Retry Level</button>
+            <button id="back-home-btn" class="secondary-btn">Back to Dashboard</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,852 @@
+/* --- Import Game Font --- */
+@import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+
+:root {
+    /* ZOOM UPDATE: Larger Character */
+    --nala-width: 200px; 
+    --nala-height: 260px; 
+    
+    /* Layout Dimensions */
+    --answer-box-height: 25vh; 
+    --game-area-height: 75vh;  
+    
+    /* ZOOM UPDATE: Larger Hole */
+    --hole-size: 200vw;
+    --hole-height-visible: 45vh;
+
+    /* Base Colors */
+    --color-primary: #e91e63; /* Pink/Red */
+    --color-secondary: #00bcd4; /* Cyan */
+    --color-background: #000;
+    --color-text-light: #fff;
+    --color-accent-yellow: #ffd700;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Bangers', cursive;
+    background-color: var(--color-background); 
+    color: var(--color-text-light);
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* =========================================
+   1. GAME AREA (Top 75%)
+   ========================================= */
+#game-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--game-area-height);
+    position: relative;
+    overflow: hidden; 
+}
+
+#game-scroll-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; 
+    transition: transform 0.5s ease-in-out; 
+    z-index: 1; 
+}
+
+#background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; 
+    background-size: cover; 
+    background-repeat: no-repeat; 
+    background-position: center bottom;
+    z-index: 1; 
+    filter: brightness(0.8); 
+    transition: background-image 1.5s ease-out, filter 0.5s; 
+}
+
+/* --- HOLE POSITIONING --- */
+#hole {
+    position: absolute;
+    bottom: -15vh; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--hole-size);
+    height: var(--hole-height-visible);
+    border-radius: 50%; 
+    z-index: 2; 
+    overflow: hidden;
+    transition: all 0.5s ease-in-out;
+    background: linear-gradient(180deg, #3e2723 0%, #1a0f0a 5%, #000000 30%, #000000 100%);
+    box-shadow: inset 0 20px 40px -5px rgba(0,0,0,1), inset 0 80px 160px rgba(0,0,0,0.9);
+    border-top: 8px solid #2e1c11;
+}
+
+#hole::after {
+    content: '';
+    position: absolute;
+    bottom: -15%; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(255, 69, 0, 0.5) 0%, rgba(255, 87, 34, 0.2) 50%, transparent 80%);
+    filter: blur(50px);
+    animation: idleGlowPulse 4s infinite alternate ease-in-out;
+    z-index: -1; 
+}
+
+@keyframes idleGlowPulse {
+    0% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+    100% { opacity: 0.8; transform: translateX(-50%) scale(1.1); } 
+}
+
+.falling-glow-pulse::after {
+    animation: fallGlowPulse 0.3s infinite alternate ease-in-out !important;
+}
+
+@keyframes fallGlowPulse {
+    0% { opacity: 1.0; filter: blur(50px) brightness(1.5); transform: translateX(-50%) scale(1.3); }
+    100% { opacity: 0.7; filter: blur(70px) brightness(1.0); transform: translateX(-50%) scale(1.6); }
+}
+
+#steps-path {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; 
+    z-index: 3; 
+}
+
+
+
+/* --- style.css --- */
+
+.step {
+    position: absolute;
+    width: 180px;  
+    height: 35px;  
+    transform-origin: center center;
+    background: repeating-linear-gradient(45deg, #6d4c41, #6d4c41 10px, #5d4037 10px, #5d4037 20px);
+    border: 3px solid #3e2723;
+    border-radius: 6px;
+    
+    /* CRITICAL HIDING FIX */
+    opacity: 0; 
+    visibility: hidden; /* <-- NEW: Strong hiding mechanism */
+    transform: scale(0.5); 
+    pointer-events: none;
+    
+    /* Transition for opacity, transform, and visibility */
+    transition: opacity 0.5s ease-out, 
+                transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.3s ease,
+                /* Hide only after the fade-out/scale transition */
+                visibility 0s 0.5s; 
+}
+
+/* Class to show the step (upon correct answer) */
+.step.revealed {
+    opacity: 1 !important; 
+    visibility: visible; /* <-- NEW: Force visibility */
+    transition-delay: 0s !important; /* Show instantly, no delay */
+    transform: scale(1) perspective(200px) rotateX(10deg); 
+    pointer-events: auto;
+}
+
+/* Stronger glow for the reveal moment */
+.step.correct-glow { 
+    box-shadow: 0 0 50px #ffd700, inset 0 0 20px #ffd700; 
+    border-color: #ffd700; 
+    z-index: 10;
+}
+/* Glow for the next step */
+.step.next-step-guide {
+    box-shadow: 0 0 15px var(--color-secondary), inset 0 0 5px var(--color-secondary);
+}
+
+.step-pole {
+    position: absolute;
+    left: 50%;
+    bottom: -100vh; 
+    width: 16px;
+    height: 100vh;
+    background: linear-gradient(90deg, #3e2723, #5d4037, #2e1c11);
+    transform: translateX(-50%);
+    z-index: -1;
+    border-left: 2px solid #2e1c11;
+    border-right: 2px solid #2e1c11;
+}
+
+.step.correct-glow { box-shadow: 0 0 40px #00ff00, inset 0 0 15px #00ff00; border-color: #00ff00; }
+.step.wrong-glow { box-shadow: 0 0 40px #ff0000, inset 0 0 15px #ff0000; border-color: #ff0000; }
+
+#nala-character {
+    position: absolute;
+    width: var(--nala-width);
+    height: var(--nala-height);
+    transition: bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                transform 0.5s ease-out,
+                opacity 0.5s ease-out;
+    z-index: 4; 
+    pointer-events: none;
+}
+
+#nala-sprite {
+    width: 100%;
+    height: 100%;
+    display: block;
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.6)); 
+}
+
+/* ---------- add near .step, #nala-character, .screen ---------- */
+
+/* Visual for a step that was removed after a wrong answer */
+.step.disappeared {
+  opacity: 0;
+  transform: scale(0.6) translateY(-20px) rotateX(5deg);
+  pointer-events: none;
+  transition: transform 0.45s ease, opacity 0.45s ease;
+  filter: grayscale(60%);
+}
+
+/* Make sure Nala is centered over step left coordinate and vertically anchored */
+#nala-character {
+  position: absolute;
+  width: var(--nala-width);
+  height: var(--nala-height);
+  transform: translateX(-50%); /* center transform; left will be a percentage */
+  transition: bottom 0.5s cubic-bezier(0.25,0.46,0.45,0.94),
+              left 0.5s cubic-bezier(0.25,0.46,0.45,0.94),
+              transform 0.5s ease-out,
+              opacity 0.5s ease-out;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* Anchor sprite inside Nala so it stands nicely on steps on narrow screens */
+#nala-sprite {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transform-origin: center bottom;
+}
+
+/* Allow full-screen screens/modals to scroll (fixes dashboard being cut at top) */
+.screen, .modal {
+  overflow-y: auto;   /* previously blocked by body overflow */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Keep body non-scrolling while playing the actual game, but allow scrolling on screens */
+body.game-active {
+  overflow: hidden;
+}
+body.screen-active {
+  overflow: auto;
+}
+
+
+#nala-character.nala-small {
+    transform: scale(0.5); 
+}
+
+/* --- ECHO TEXT FOR FALLING --- */
+.echo-text {
+    position: absolute;
+    font-size: 2.5rem;
+    color: #ff4500;
+    text-shadow: 2px 2px 5px #000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5; 
+    transition: transform 1.5s ease-out, opacity 1.5s ease-out, top 1.5s ease-out;
+}
+
+/* --- HUT STYLING --- */
+#castle-image {
+    position: absolute;
+    bottom: 200vh; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px; 
+    height: 350px; 
+    z-index: 3; 
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+    opacity: 0; 
+    transition: opacity 0.5s ease-in-out, filter 0.5s ease-in-out;
+}
+
+#castle-image.glowing {
+    opacity: 1;
+    animation: pulseGlow 1.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    0% { filter: drop-shadow(0 0 15px #ffdf60) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+    100% { filter: drop-shadow(0 0 30px #ff6f00) drop-shadow(0 0 10px #ffdf60); }
+}
+
+#castle-image.final-glow-pulse {
+    opacity: 1;
+    animation: finalGlow 0.8s ease-in-out, finalLight 0.2s 4 alternate;
+}
+
+@keyframes finalGlow {
+    0% { opacity: 0; transform: translateX(-50%) scale(1.1); }
+    100% { opacity: 1; transform: translateX(-50%) scale(1); filter: drop-shadow(0 0 50px #00ff88); }
+}
+
+@keyframes finalLight {
+    0% { filter: drop-shadow(0 0 20px #00ff88) brightness(1.5); }
+    100% { filter: drop-shadow(0 0 10px #00ff88) brightness(1.0); }
+}
+
+
+/* =========================================
+   2. UI OVERLAY
+   ========================================= */
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; 
+    padding: 15px;
+    box-sizing: border-box;
+    pointer-events: none; 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#timer {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2.2rem;
+    color: var(--color-accent-yellow);
+    text-shadow: 3px 3px 0 #000;
+    letter-spacing: 2px;
+}
+
+
+#ancestor-powers { 
+    position: absolute; 
+    top: 55px; 
+    left: 20px; 
+    display:flex; 
+    gap:10px; 
+    z-index:12; 
+    pointer-events:auto; 
+}
+.anc-power { 
+    display:flex; 
+    flex-direction:column; 
+    align-items:center; 
+    font-size:0.9rem; 
+    padding:6px; 
+    border-radius:8px; 
+    border:2px solid rgba(255,255,255,0.08); 
+    background:rgba(0,0,0,0.4); 
+}
+.anc-icon { 
+    font-weight:bold; 
+    font-size:1rem; 
+}
+.anc-count { 
+    font-size:0.9rem; 
+    margin-top:2px; 
+    color:var(--color-accent-yellow); 
+}
+.anc-power.anc-empty { 
+    filter: grayscale(100%); 
+    opacity:0.45; 
+}
+.anc-power.glow { 
+    box-shadow: 0 0 16px var(--color-secondary); 
+    transform:translateY(-3px); 
+}
+
+
+
+
+
+
+#ancestor-power-indicator {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-size: 1.5rem;
+    color: var(--color-secondary);
+    text-shadow: 2px 2px 0 #000;
+}
+
+#question-area {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+    pointer-events: auto;
+}
+
+#question-text {
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 15px;
+    border: 3px solid var(--color-accent-yellow);
+    display: inline-block;
+    font-size: 2rem; 
+    max-width: 90%;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.7);
+}
+
+/* =========================================
+   3. ANSWER BOX
+   ========================================= */
+#answer-choices {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: var(--answer-box-height);
+    background-color: #333;
+    border-top: 6px solid #111;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 15px;
+    box-sizing: border-box;
+    z-index: 20; 
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.8);
+}
+
+.answer-btn {
+    background: linear-gradient(to bottom, #3f51b5, #303f9f);
+    color: white;
+    border: 3px solid #1a237e;
+    border-radius: 12px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.8rem; 
+    cursor: pointer;
+    transition: all 0.1s ease;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+}
+
+.answer-btn:hover { background: linear-gradient(to bottom, #5c6bc0, #3949ab); transform: translateY(-3px); box-shadow: 0 5px 0 #1a237e; }
+.answer-btn:active { transform: translateY(3px); box-shadow: none; }
+.answer-btn:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
+
+/* =========================================
+   4. FULL SCREENS & MODALS
+   ========================================= */
+.hidden { display: none !important; }
+
+/* Update the global .screen style */
+.screen, .modal {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* CRITICAL FIX: The screen itself should scroll if content overflows */
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch;
+    z-index: 100;
+    
+    /* Keep centering properties for the intro/story screens */
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: flex-start; /* CRITICAL UPDATE: Align items to the top for the dashboard */
+    
+    background: var(--color-background);
+    color: var(--color-text-light);
+    padding: 0; /* Remove padding here, add it to content */
+}
+.dashboard-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    
+    /* CRITICAL FIX: Add a generous top margin to push the content down 
+       so the first few cards are not hidden behind the header. 
+       (120px is a safe size for most mobile/desktop headers) */
+    margin-top: 120px; 
+    
+    /* Keep existing side/bottom padding */
+    padding: 0 20px 30px 20px; 
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background: #1a1a1a;
+    padding: 40px;
+    border-radius: 20px;
+    border: 5px solid var(--color-primary);
+    box-shadow: 0 0 50px rgba(233, 30, 99, 0.5);
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+}
+
+.main-btn, .secondary-btn {
+    padding: 15px 40px;
+    font-size: 2rem;
+    font-family: 'Bangers', cursive;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    margin: 10px;
+}
+
+.main-btn {
+    background: var(--color-primary);
+    border: 3px solid #880e4f;
+    color: white;
+}
+.main-btn:hover { background: #ff4081; transform: scale(1.05); }
+.main-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+.secondary-btn {
+    background: #444;
+    border: 3px solid #222;
+    color: white;
+    font-size: 1.5rem;
+}
+.secondary-btn:hover { background: #666; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- INTRO SCREEN SPECIFIC --- */
+.intro-content {
+    max-width: 700px;
+    width: 90%;
+    text-align: center;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+}
+.intro-image {
+    max-width: 100%;
+    height: auto;
+    max-height: 40vh;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+#intro-title { font-size: 4rem; color: var(--color-accent-yellow); }
+#intro-detail { font-size: 1.5rem; }
+.intro-controls { margin-top: 30px; }
+
+
+/* --- DASHBOARD SPECIFIC --- */
+.dashboard-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* CRITICAL FIX: This centers children (header and gallery) horizontally */
+    width: 100%;
+    /* Add padding to prevent header/cards from being cut at the top/bottom */
+    padding: 30px 20px; 
+    box-sizing: border-box;
+}
+/* Update dashboard-header for stickiness and background */
+.dashboard-header { 
+    width: 100%; 
+    max-width: 1000px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    
+    /* CRITICAL FIX: Make the header stick to the top */
+    position: sticky;
+    top: 0;
+    z-index: 20; /* Higher than content */
+    
+    /* Ensure header looks good and covers content when sticky */
+    padding: 20px; 
+    box-sizing: border-box; 
+    background-color: var(--color-background); 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5); /* Optional: Shadow for effect */
+    
+    /* Remove the 'margin: 0 auto 20px auto;' from previous steps */
+    margin: 0 auto; 
+}
+.level-gallery { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 30px; 
+    max-width: 1000px; 
+    width: 100%; 
+    /* CRITICAL FIX: Auto margins will center the block element (gallery) */
+    margin: 0 auto; 
+}
+.level-card {
+    background: #2a2a2a;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    border: 3px solid #444;
+    transition: all 0.2s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+.level-card:hover { 
+    transform: translateY(-5px); 
+    border-color: var(--color-primary);
+    box-shadow: 0 10px 25px rgba(233, 30, 99, 0.3);
+}
+.card-image {
+    width: 100%;
+    max-height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+.level-details {
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 1px dashed #555;
+}
+.level-details p {
+    font-size: 1.2rem;
+    margin: 5px 0;
+}
+
+
+/* --- LEVEL INTRO SPECIFIC --- */
+.spirit-guide-box {
+    margin: 30px 0;
+}
+.guide-image {
+    width: 150px;
+    height: auto;
+    border-radius: 50%;
+    border: 5px solid var(--color-secondary);
+    box-shadow: 0 0 30px var(--color-secondary);
+}
+#spirit-guide-name {
+    font-size: 2rem;
+    color: var(--color-secondary);
+    margin-top: 10px;
+}
+.story-fade {
+    font-size: 2rem;
+    height: 60px; /* Fixed height for animation */
+    margin-bottom: 40px;
+    transition: opacity 0.5s ease-in-out;
+}
+
+
+/* --- SUBJECT SELECTION MODAL --- */
+.subject-choices {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.subject-btn {
+    padding: 15px 25px;
+    font-size: 1.8rem;
+    font-family: 'Bangers', cursive;
+    background: #555;
+    border: 3px solid #333;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.subject-btn.selected {
+    background: var(--color-secondary);
+    border-color: #00798b;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 188, 212, 0.7);
+}
+
+/* --- SETTINGS MODAL --- */
+.settings-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #444;
+    width: 100%;
+    font-size: 1.5rem;
+}
+.settings-group:last-of-type {
+    border-bottom: none;
+    margin-bottom: 20px;
+}
+.settings-group input[type="checkbox"] {
+    width: 30px;
+    height: 30px;
+}
+
+
+/* --- WIN/FAIL SCREEN --- */
+.message-box h1 { font-size: 4rem; margin-bottom: 20px; color: var(--color-accent-yellow); }
+.result-image { max-width: 200px; height: auto; border-radius: 10px; margin-bottom: 20px; }
+.result-story { font-size: 1.5rem; margin-bottom: 30px; }
+.modal-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* --- Ancestor Power Visual Effects --- */
+
+/* 1. Aura/Shield Glow Effect */
+@keyframes shield-aura {
+    0% { box-shadow: 0 0 0px var(--color-secondary); opacity: 0.5; }
+    50% { box-shadow: 0 0 50px var(--color-secondary), 0 0 80px var(--color-secondary); opacity: 1; }
+    100% { box-shadow: 0 0 0px var(--color-secondary); opacity: 0.5; }
+}
+
+.nala-shield-active {
+    /* Apply glow to the character container */
+    position: relative;
+    z-index: 10;
+    animation: shield-aura 0.7s ease-in-out infinite alternate;
+}
+
+/* 2. Streak/Boost Glow Effect */
+@keyframes streak-glow {
+    0% { filter: brightness(1); border-color: #fff; }
+    50% { filter: brightness(1.5) hue-rotate(15deg); border-color: var(--color-accent-yellow); }
+    100% { filter: brightness(1); border-color: #fff; }
+}
+
+.nala-boost-active #nala-sprite {
+    /* Apply glow effect directly to the sprite image */
+    animation: streak-glow 0.4s ease-out 2; /* Flash twice */
+}
+
+/* 3. Floating Power Text Overlay */
+@keyframes power-text-float {
+    0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+    30% { transform: translate(-50%, -30px) scale(1.2); opacity: 1; }
+    70% { transform: translate(-50%, -60px) scale(1.1); opacity: 1; }
+    100% { transform: translate(-50%, -100px) scale(0.9); opacity: 0; }
+}
+
+#power-message-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    z-index: 50;
+    color: var(--color-accent-yellow);
+    font-size: 5rem;
+    text-shadow: 4px 4px 0 var(--color-primary);
+    pointer-events: none;
+    display: none; /* Hidden by default */
+}
+
+.power-text-activated {
+    display: block !important;
+    animation: power-text-float 1.5s ease-out forwards;
+}
+/* --- ANCESTOR POWER UI (Compact, Icon-Based) --- */
+
+/* Ancestor Powers Container: Compact, horizontal row */
+#ancestor-powers {
+    position: absolute;
+    top: 10px;
+    right: 10px; /* Moved to the top right, away from the timer */
+    display: flex;
+    gap: 5px; /* Compact spacing between powers */
+    z-index: 101;
+}
+
+/* Individual Power Element: Compact, bordered box */
+.anc-power {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    border: 3px solid var(--color-accent-yellow); /* Bright border */
+    border-radius: 8px;
+    padding: 2px 5px; /* Minimal padding */
+    height: 35px; /* Fixed height for consistency */
+    line-height: 1; 
+    transition: all 0.3s;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+/* Icon Part */
+.anc-icon {
+    font-size: 20px; /* Emoji size */
+    margin-right: 4px;
+    height: 20px;
+}
+
+/* Count Part (the number) */
+.anc-count {
+    color: var(--color-accent-yellow);
+    font-size: 1.8rem;
+    font-weight: bold;
+    font-family: 'Bangers', cursive;
+    /* Small background to make the count pop */
+    background: #444;
+    border-radius: 4px;
+    padding: 1px 4px;
+    min-width: 15px;
+    text-align: center;
+}
+
+/* Depleted Power State */
+.anc-power.anc-depleted {
+    opacity: 0.5;
+    border-color: #555;
+    box-shadow: none;
+    filter: grayscale(100%);
+}
+
+.anc-power.anc-depleted .anc-count {
+    color: #999;
+    background: #222;
+}
+
+/* Ensure the Power Indicator is positioned correctly near the powers */
+#ancestor-power-indicator {
+    position: absolute;
+    top: 50px; /* Positioned below the power icons */
+    right: 10px;
+    z-index: 101;
+    background: var(--color-primary);
+    color: var(--color-text-light);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
